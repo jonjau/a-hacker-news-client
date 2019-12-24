@@ -24,40 +24,54 @@ class App extends Component {
     };
 
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
   }
 
   setSearchTopStories(result) {
     this.setState({ result });
   }
 
-  // lifecycle method like constructor() and render(), from Component
-  componentDidMount() {
-    const { searchTerm } = this.state;
-
+  fetchSearchTopStories(searchTerm) {
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
       .catch(error => error);
   }
 
-  onDismiss(id) {
-    const isNotId = item => item.objectID !== id;
-    const updatedList = this.state.list.filter(isNotId);
-    this.setState({ list: updatedList });
+  // lifecycle method like constructor() and render(), from Component
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
   }
 
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
   }
 
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+    // prevent browser from reloading every time search is submitted
+    event.preventDefault();
+  }
+
+  onDismiss(id) {
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    // Object.assign() merges into the first argument the trailing arguments
+    // Thus, none of the trailing source objects are mutated.
+    // Alternatively, we can use the object spread operator:
+    this.setState({
+      result: { ...this.state.result, hits: updatedHits }
+    });
+  }
+
+
   render() {
     const { searchTerm, result } = this.state;
-
-    if (!result) {
-      return null;
-    }
 
     return (
       <div className="page">
@@ -65,14 +79,17 @@ class App extends Component {
           <Search
             value={searchTerm}
             onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
           >
             Search
           </Search>
-          <Table
-            list={result.hits}
-            pattern={searchTerm}
-            onDismiss={this.onDismiss}
-          />
+          {result
+            ? <Table
+              list={result.hits}
+              onDismiss={this.onDismiss}
+            />
+            : null
+          }
         </div>
       </div>
     );
@@ -80,19 +97,26 @@ class App extends Component {
 }
 
 // ES6 Arrow function as component declaration (stateless)
-const Search = ({ value, onChange, children }) =>
-  <form>
-    {children}
+const Search = ({
+  value,
+  onChange,
+  onSubmit,
+  children
+}) =>
+  <form onSubmit={onSubmit}>
     <input
       type="text"
       value={value}
       onChange={onChange}
     />
+    <button type="submit">
+      {children}
+    </button>
   </form>
 
-const Table = ({ list, pattern, onDismiss }) =>
+const Table = ({ list, onDismiss }) =>
   <div className="table">
-    {list.filter(isSearched(pattern)).map(item =>
+    {list.map(item =>
       <div key={item.objectID} className="table-row">
         <span style={{ width: '40%' }}>
           <a href={item.url}>{item.title}</a>
