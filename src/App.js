@@ -21,7 +21,7 @@ const list = [
 ];
 
 function isSearched(searchTerm) {
-  return function(item) {
+  return function (item) {
     return item.title.toLowerCase().includes(searchTerm.toLowerCase());
   }
 }
@@ -41,7 +41,7 @@ class App extends Component {
   }
 
   onDismiss(id) {
-    const isNotId = item => item.objectID !== id; 
+    const isNotId = item => item.objectID !== id;
     const updatedList = this.state.list.filter(isNotId);
     this.setState({ list: updatedList });
   }
@@ -54,33 +54,75 @@ class App extends Component {
     const { searchTerm, list } = this.state;
     return (
       <div className="App">
-        <form>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={this.onSearchChange}
-          />
-        </form>
-        {list.filter(isSearched(searchTerm)).map(item =>
-          <div key={item.objectID}>
-            <span>
-              <a href={item.url}>{item.title}</a>
-            </span>
-              <span>{item.author}</span>
-              <span>{item.num_comments}</span>
-              <span>{item.points}</span>
-              <span>
-                <button
-                  onClick={() => this.onDismiss(item.objectID)}
-                  type="button"
-                > Dismiss
-                </button>
-              </span>
-          </div>
-        )}
+        <Search
+          value={searchTerm}
+          onChange={this.onSearchChange}
+        >
+          Search
+        </Search>
+        <Table
+          list={list}
+          pattern={searchTerm}
+          onDismiss={this.onDismiss}
+        />
       </div>
     );
   }
+}
+
+function Search(props) {
+  const { value, onChange, children } = props;
+  return (
+    <form>
+      {children}
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+      />
+    </form>
+  );
+}
+
+function Table(props) {
+  const { list, pattern, onDismiss } = props;
+  return (
+    <div>
+      {list.filter(isSearched(pattern)).map(item =>
+        <div key={item.objectID}>
+          <span>
+            <a href={item.url}>{item.title}</a>
+          </span>
+          <span>{item.author}</span>
+          <span>{item.num_comments}</span>
+          <span>{item.points}</span>
+          <span>
+            <Button onClick={() => onDismiss(item.objectID)}>
+              Dismiss
+              </Button>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Button(props) {
+  const {
+    onClick,
+    className = '',
+    children
+  } = props;
+
+  return (
+    <button
+      onClick={onClick}
+      className={className}
+      type="button"
+    >
+      {children}
+    </button>
+  );
 }
 
 export default App;
