@@ -2,16 +2,13 @@ import React, { Component } from 'react';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_HPP = '100';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-
-function isSearched(searchTerm) {
-  return function (item) {
-    return item.title.toLowerCase().includes(searchTerm.toLowerCase());
-  }
-}
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
 class App extends Component {
 
@@ -31,11 +28,28 @@ class App extends Component {
   }
 
   setSearchTopStories(result) {
-    this.setState({ result });
+    const { hits, page } = result;
+
+    const oldhits = page !== 0
+      ? this.state.result.hits
+      : [];
+
+    const updatedHits = [
+      ...oldhits,
+      ...hits
+    ];
+
+    // remember page: page can be written as just page
+    this.setState({
+      result: { hits: updatedHits, page }
+    });
   }
 
-  fetchSearchTopStories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopStories(searchTerm, page = 0) {
+    fetch(
+        `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}
+        &${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
+      )
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
       .catch(error => error);
@@ -72,6 +86,8 @@ class App extends Component {
 
   render() {
     const { searchTerm, result } = this.state;
+    // page defaults to 0
+    const page = (result && result.page) || 0;
 
     return (
       <div className="page">
@@ -90,6 +106,13 @@ class App extends Component {
             />
             : null
           }
+          <div className="interactions">
+            <Button onClick={() => 
+              this.fetchSearchTopStories(searchTerm, page + 1)}
+            >
+              More
+            </Button>
+          </div>
         </div>
       </div>
     );
