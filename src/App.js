@@ -16,10 +16,12 @@ class App extends Component {
     super(props);
 
     this.state = {
-      result: null,
+      results: null,
+      searchKey: '',
       searchTerm: DEFAULT_QUERY,
     };
 
+    this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
@@ -27,21 +29,33 @@ class App extends Component {
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
   }
 
+  needsToSearchTopStories(searchTerm) {
+    return !this.state.results[searchTerm];
+  }
+
   setSearchTopStories(result) {
     const { hits, page } = result;
+    const { searchKey, results } = this.state;
 
-    const oldhits = page !== 0
-      ? this.state.result.hits
+    // store current search result (if any), from the client-side cache
+    const oldHits = result && results[searchKey]
+      ? results[searchKey].hits
       : [];
 
+    // add on new search hits to old search hits
     const updatedHits = [
-      ...oldhits,
+      ...oldHits,
       ...hits
     ];
 
     // remember page: page can be written as just page
+    // note ES6 computed property syntax, resolving variables to property names
+    // this adds on the current searched result to list of past searches
     this.setState({
-      result: { hits: updatedHits, page }
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page }
+      }
     });
   }
 
@@ -58,6 +72,7 @@ class App extends Component {
   // lifecycle method like constructor() and render(), from Component
   componentDidMount() {
     const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
   }
 
@@ -67,27 +82,52 @@ class App extends Component {
 
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
-    this.fetchSearchTopStories(searchTerm);
+    this.setState({ searchKey: searchTerm });
+
+    if (this.needsToSearchTopStories(searchTerm)) {
+      this.fetchSearchTopStories(searchTerm);
+    }
     // prevent browser from reloading every time search is submitted
     event.preventDefault();
   }
 
   onDismiss(id) {
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+
     const isNotId = item => item.objectID !== id;
-    const updatedHits = this.state.result.hits.filter(isNotId);
+    const updatedHits = hits.filter(isNotId);
     // Object.assign() merges into the first argument the trailing arguments
     // Thus, none of the trailing source objects are mutated.
     // Alternatively, we can use the object spread operator:
     this.setState({
-      result: { ...this.state.result, hits: updatedHits }
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page }
+      }
     });
   }
 
-
   render() {
-    const { searchTerm, result } = this.state;
-    // page defaults to 0
-    const page = (result && result.page) || 0;
+    const {
+      searchTerm,
+      results,
+      searchKey
+    } = this.state;
+
+    // page (number) defaults to 0, check from past searches
+    const page = (
+      results &&
+      results[searchKey] &&
+      results[searchKey].page
+    ) || 0;
+
+    // search hits list defaults to empty, check from past searches
+    const list = (
+      results &&
+      results[searchKey] &&
+      results[searchKey].hits
+    ) || [];
 
     return (
       <div className="page">
@@ -99,16 +139,14 @@ class App extends Component {
           >
             Search
           </Search>
-          {result
-            ? <Table
-              list={result.hits}
+          {<Table
+              list={list}
               onDismiss={this.onDismiss}
             />
-            : null
           }
           <div className="interactions">
             <Button onClick={() => 
-              this.fetchSearchTopStories(searchTerm, page + 1)}
+              this.fetchSearchTopStories(searchKey, page + 1)}
             >
               More
             </Button>
