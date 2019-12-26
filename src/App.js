@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import './App.css';
 
@@ -36,9 +37,9 @@ class App extends Component {
   setSearchTopStories(result) {
     const { hits, page } = result;
     const { searchKey, results } = this.state;
-
+    
     // store current search result (if any), from the client-side cache
-    const oldHits = result && results[searchKey]
+    const oldHits = results && results[searchKey]
       ? results[searchKey].hits
       : [];
 
@@ -67,11 +68,13 @@ class App extends Component {
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
       .catch(error => error);
+    
   }
 
   // lifecycle method like constructor() and render(), from Component
   componentDidMount() {
     const { searchTerm } = this.state;
+    
     this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
   }
@@ -129,6 +132,7 @@ class App extends Component {
       results[searchKey].hits
     ) || [];
 
+
     return (
       <div className="page">
         <div className="interactions">
@@ -157,11 +161,10 @@ class App extends Component {
   }
 }
 
-// ES6 Arrow function as component declaration (stateless)
 const Search = ({
+  onSubmit,
   value,
   onChange,
-  onSubmit,
   children
 }) =>
   <form onSubmit={onSubmit}>
