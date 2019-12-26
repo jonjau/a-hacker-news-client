@@ -20,6 +20,7 @@ class App extends Component {
       results: null,
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
+      error: null
     };
 
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -67,7 +68,7 @@ class App extends Component {
       )
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
-      .catch(error => error);
+      .catch(error => this.setState({ error }));
     
   }
 
@@ -115,7 +116,8 @@ class App extends Component {
     const {
       searchTerm,
       results,
-      searchKey
+      searchKey,
+      error
     } = this.state;
 
     // page (number) defaults to 0, check from past searches
@@ -132,7 +134,6 @@ class App extends Component {
       results[searchKey].hits
     ) || [];
 
-
     return (
       <div className="page">
         <div className="interactions">
@@ -143,10 +144,14 @@ class App extends Component {
           >
             Search
           </Search>
-          {<Table
-              list={list}
-              onDismiss={this.onDismiss}
-            />
+          { error
+            ? <div className="interactions">
+                <p>Something went wrong.</p>
+              </div>
+            : <Table
+                list={list}
+                onDismiss={this.onDismiss}
+              />
           }
           <div className="interactions">
             <Button onClick={() => 
