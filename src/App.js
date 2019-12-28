@@ -51,29 +51,10 @@ class App extends Component {
 
   setSearchTopStories(result) {
     const { hits, page } = result;
-    const { searchKey, results } = this.state;
 
-    // store current search result (if any), from the client-side cache
-    const oldHits = results && results[searchKey]
-      ? results[searchKey].hits
-      : [];
-
-    // add on new search hits to old search hits
-    const updatedHits = [
-      ...oldHits,
-      ...hits
-    ];
-
-    // remember page: page can be written as just page
-    // note ES6 computed property syntax, resolving variables to property names
-    // this adds on the current searched result to list of past searches
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: { hits: updatedHits, page }
-      },
-      isLoading: false
-    });
+    // use function to set state to prevent bugs due to stale state
+    // setState() is asynchronous
+    this.setState(updateSearchTopStoriesState(hits, page));
   }
 
   fetchSearchTopStories(searchTerm, page = 0) {
@@ -189,6 +170,32 @@ class App extends Component {
   }
 }
 
+const updateSearchTopStoriesState = (hits, page) => (prevState) => {
+  const { searchKey, results } = prevState;
+
+  // store current search result (if any), from the client-side cache
+  const oldHits = results && results[searchKey]
+    ? results[searchKey].hits
+    : [];
+
+  // add on new search hits to old search hits
+  const updatedHits = [
+    ...oldHits,
+    ...hits
+  ];
+
+  // remember page: page can be written as just page
+  // note ES6 computed property syntax
+  // this adds on the current searched result to list of past searches
+  return {
+    results: {
+      ...results,
+      [searchKey]: { hits: updatedHits, page }
+    },
+    isLoading: false
+  };
+};
+
 const Loading = () =>
   <div>Loading...</div>
 
@@ -240,7 +247,7 @@ const Sort = ({
       {children}
     </Button>
   );
-}
+};
 
 class Table extends Component {
   constructor(props) {

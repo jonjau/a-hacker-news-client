@@ -91,8 +91,6 @@ describe('Table', () => {
       { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'x'},
     ],
     onDismiss: NOOP,
-    sortKey: 'TITLE',
-    isSortReverse: false
   }
 
   it('renders without crashing', () => {
