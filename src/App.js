@@ -24,7 +24,8 @@ class App extends Component {
       results: null,
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
-      error: null
+      error: null,
+      isLoading: false
     };
 
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -42,7 +43,7 @@ class App extends Component {
   setSearchTopStories(result) {
     const { hits, page } = result;
     const { searchKey, results } = this.state;
-    
+
     // store current search result (if any), from the client-side cache
     const oldHits = results && results[searchKey]
       ? results[searchKey].hits
@@ -61,27 +62,29 @@ class App extends Component {
       results: {
         ...results,
         [searchKey]: { hits: updatedHits, page }
-      }
+      },
+      isLoading: false
     });
   }
 
   fetchSearchTopStories(searchTerm, page = 0) {
+    this.setState({ isLoading: true });
+    
     axios(
-        `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}
+      `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}
         &${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
-      )
+    )
       // avoid warning when promise (from fetch) is acted upon when 
       // component is unmounted
       .then(result => this._isMounted && this.setSearchTopStories(result.data))
       .catch(error => this._isMounted && this.setState({ error }));
-    
   }
 
   // lifecycle method like constructor() and render(), from Component
   componentDidMount() {
-    this._isMounted = false;
+    this._isMounted = true;
     const { searchTerm } = this.state;
-    
+
     this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
   }
@@ -127,9 +130,10 @@ class App extends Component {
       searchTerm,
       results,
       searchKey,
-      error
+      error,
+      isLoading
     } = this.state;
-
+   
     // page (number) defaults to 0, check from past searches
     const page = (
       results &&
@@ -154,27 +158,35 @@ class App extends Component {
           >
             Search
           </Search>
-          { error
+          {error
             ? <div className="interactions">
-                <p>Something went wrong.</p>
-              </div>
+              <p>Something went wrong.</p>
+            </div>
             : <Table
-                list={list}
-                onDismiss={this.onDismiss}
-              />
+              list={list}
+              onDismiss={this.onDismiss}
+            />
           }
           <div className="interactions">
-            <Button onClick={() => 
-              this.fetchSearchTopStories(searchKey, page + 1)}
-            >
+            <ButtonWithLoading
+              isLoading={isLoading}
+              onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
               More
-            </Button>
+            </ButtonWithLoading>
           </div>
         </div>
       </div>
     );
   }
 }
+
+const Loading = () =>
+  <div>Loading...</div>
+
+const withLoading = (Component) => ({ isLoading, ...rest }) =>
+  isLoading
+  ? <Loading />
+  : <Component {...rest} />
 
 const Search = ({
   onSubmit,
@@ -233,7 +245,7 @@ Table.propTypes = {
   onDismiss: PropTypes.func.isRequired
 };
 
-const Button = ({ onClick, className, children}) =>
+const Button = ({ onClick, className, children }) =>
   <button
     onClick={onClick}
     className={className}
@@ -251,6 +263,8 @@ Button.propTypes = {
 Button.defaultProps = {
   className: ''
 };
+
+const ButtonWithLoading = withLoading(Button);
 
 export default App;
 
