@@ -7,7 +7,7 @@ import App, { Search, Button, Table } from './App';
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const noop = ()=>{};
+const NOOP = ()=>{};
 
 // Tests with Jest
 describe('App', () => {
@@ -33,8 +33,8 @@ describe('App', () => {
 describe('Search', () => {
 
   const props = {
-    onSubmit: noop,
-    onChange: noop
+    onSubmit: NOOP,
+    onChange: NOOP
   }
 
   it('renders without crashing', () => {
@@ -62,7 +62,7 @@ describe('Search', () => {
 describe('Button', () => {
 
   const props = {
-    onClick: noop
+    onClick: NOOP
   }
 
   it('renders without crashing', () => {
@@ -90,7 +90,7 @@ describe('Table', () => {
       { title: '1', author: '1', num_comments: 1, points: 2, objectID: 'y'},
       { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'x'},
     ],
-    onDismiss: noop
+    onDismiss: NOOP
   }
 
   it('renders without crashing', () => {
