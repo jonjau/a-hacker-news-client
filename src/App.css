@@ -2,6 +2,14 @@
   margin: 20px;
 }
 
+.title {
+  text-align: center;
+  font-size: large;
+  padding: 20px;
+  font-weight: bold;
+  font-family: monospace;
+}
+
 .interactions {
   text-align: center;
 }

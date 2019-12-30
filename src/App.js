@@ -142,6 +142,9 @@ class App extends Component {
 
     return (
       <div className="page">
+        <div className="title">
+          a-hacker-news-client
+        </div>
         <div className="interactions">
           <Search
             value={searchTerm}
