@@ -1,5 +1,7 @@
 ## Hacker News client
 
+As in 'The Road to Learn React'.
+
 This project was bootstrapped with 
 [Create React App](https://github.com/facebook/create-react-app).
 
