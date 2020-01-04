@@ -91,7 +91,6 @@ class App extends Component {
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
-    console.log(this.state.searchKey)
 
     if (this.needsToSearchTopStories(searchTerm)) {
       this.fetchSearchTopStories(searchTerm);
